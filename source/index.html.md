@@ -3,12 +3,12 @@ title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
-  - ruby
+  - java	
   - python
   - javascript
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
+  - <a href='https://app.cybermdcare.com/api/index.do'>Sign Up for a Developer Key</a>
   - <a href='https://github.com/slatedocs/slate'>Documentation Powered by Slate</a>
 
 includes:
@@ -21,221 +21,389 @@ code_clipboard: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the CyberMDCare API! You can use our API to access CyberMDCare API endpoints, which can make an appointment and get the information of appointment and cancel an appointment from our database.
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
-
-This example API documentation page was created with [Slate](https://github.com/slatedocs/slate). Feel free to edit it and use it as a base for your own API's documentation.
+We have language bindings in Shell. You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
 
 # Authentication
 
-> To authorize, use this code:
+CyberMDCare uses the one-time-access-token to allow access to the API. You can get an one-time-access-token by API key. You can register a new CyberMDCare API key at our [developer portal](https://app.cybermdcare.com/api/index.do).
 
-```ruby
-require 'kittn'
+## Getting an One-time Access token
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+> To get one-time Access token, use this code:
+
+```java
+OkHttpClient client = new OkHttpClient().newBuilder()
+								.build();
+Request request = new Request.Builder()
+								.url("https://app.cybermdcare.com/api/token?apiKey=[apiKey]")
+								.method("GET", null)
+								.build();
+Response response = client.newCall(request).execute();
 ```
 
 ```python
-import kittn
+import requests
 
-api = kittn.authorize('meowmeowmeow')
+url = "https://app.cybermdcare.com/api/token?apiKey=[apiKey]"
+payload={}
+files={}
+headers = {}
+
+response = requests.request("GET", url, headers=headers, data=payload, files=files)
+
+print(response.text)
 ```
 
 ```shell
 # With shell, you can just pass the correct header with each request
-curl "api_endpoint_here" \
-  -H "Authorization: meowmeowmeow"
-```
+curl "https://app.cybermdcare.com/api/token?apiKey=[apiKey]" 
+```	
 
 ```javascript
-const kittn = require('kittn');
+var settings = {
+  "url": "https://app.cybermdcare.com/api/token?apiKey=[apiKey]",
+  "method": "GET"
+};
 
-let api = kittn.authorize('meowmeowmeow');
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
 ```
 
-> Make sure to replace `meowmeowmeow` with your API key.
+> Make sure to replace `[apiKey]` with your API key.
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+A One-time access token can only be used once per API request. 
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
-
-`Authorization: meowmeowmeow`
-
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+<aside class="warning">Once used, the one-time access token cannot be reused. 
+<br>
+Please re-issue a one-time access token to use another API request.
 </aside>
-
-# Kittens
-
-## Get All Kittens
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens" \
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
-
-This endpoint retrieves all kittens.
 
 ### HTTP Request
 
-`GET http://example.com/api/kittens`
+`GET https://app.cybermdcare.com/api/token`
 
 ### Query Parameters
 
-Parameter | Default | Description
+Parameter | Required | Description
 --------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+apiKey | true | The ApiKey that CyberMDCare issued.
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
+
+### HTTP Response 
+
+Key | Description
+--------- | -----------
+response_cd |  response code.
+message | server message. if errors, show the reason.
+token | one-time access token.
+
+CyberMDCare expects for the one-time Access-token to be included in all API requests to the server in a header that looks like the following:
+
+`token: [Access-token]`
+
+<aside class="notice">
+You must replace <code>[Access-token]</code> with your personal Access-token.
 </aside>
 
-## Get a Specific Kitten
+# Appointment
 
-```ruby
-require 'kittn'
+## Make an appointment
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
+
+```java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  								.build();
+MediaType mediaType = MediaType.parse("application/json");
+RequestBody body = RequestBody.create(mediaType, "{\r\n    \"npiNo\":\"1234567890\",\r\n    \"patNo\":\"1234\",\r\n    \"patNm\":\"ABCD\",\r\n    \"gender\":\"F\",\r\n    \"dob\":\"12/12/2020\"\r\n}");
+Request request = new Request.Builder()
+							  .url("https://app.cybermdcare.com/api/appot")
+							  .method("POST", body)
+							  .addHeader("Content-Type", "application/json")
+							  .addHeader("token", "[Access-token]")
+							  .build();
+Response response = client.newCall(request).execute();
 ```
 
 ```python
-import kittn
+import requests
+import json
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
+url = "https://app.cybermdcare.com/api/appot"
+payload = json.dumps({
+  "npiNo": "1234567890",
+  "patNo": "1234",
+  "patNm": "ABCD",
+  "gender": "F",
+  "dob": "12/12/2020"
+})
+headers = {
+  'token': '[Access-token]',
+  'Content-Type': 'application/json'
+}
+
+response = requests.request("POST", url, headers=headers, data=payload)
+
+print(response.text)
 ```
 
 ```shell
-curl "http://example.com/api/kittens/2" \
-  -H "Authorization: meowmeowmeow"
+
+
+curl -X POST "https://app.cybermdcare.com/api/appot" \
+-H 'Content-Type: application/json'  \
+-H 'token: [Access-token]' \	
+--data-raw "{
+    \"npiNo\":\"1234567890\",
+    \"patNo\":\"1234\",
+    \"patNm\":\"ABCD\",
+    \"gender\":\"F\",
+    \"dob\":\"12/12/2020\"
+}"
+
 ```
 
 ```javascript
-const kittn = require('kittn');
+var settings = {
+  "url": "https://app.cybermdcare.com/api/appot",
+  "method": "POST",
+  "headers": {
+    "token": "[Access-token]",
+    "Content-Type": "application/json"
+  },
+  "data": JSON.stringify({
+    "npiNo": "1234567890",
+    "patNo": "1234",
+    "patNm": "ABCD",
+    "gender": "F",
+    "dob": "12/12/2020"
+  }),
+};
 
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
 ```
-
+> Make sure to replace `[Access-token]` with your Access-token.
 > The above command returns JSON structured like this:
 
 ```json
 {
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
+    "response_cd": "200",
+    "message": "ok",
+    "appot_dt": "05-30-2021 15:52",
+    "signup_url": null,
+    "url": "https://app.cybermdcare.com/api/index.do",
+    "appot_no": "12345678"
 }
 ```
 
-This endpoint retrieves a specific kitten.
-
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+This endpoint makes telemedicine appointments.
 
 ### HTTP Request
 
-`GET http://example.com/kittens/<ID>`
+`POST https://app.cybermdcare.com/api/appot`
+
+### JSON Body 
+
+Key | Required | Description
+--------- | ------- | -----------
+npiNo | true | Valid NPI number
+state | false | State in which the doctor's NPI number is valid. if empty, default value is 'CA'.
+patNo | false | Patient number managed by RPM. If the patient number is stored in our system, you can make an appointment with the npi number and patient number.
+patNm | true | Patient name. If new patient, the value is required.
+gender | true | Patient gender. choose 'M'(male) or 'F'(female). If new patient, the value is required.
+dob | true | Patient date of birth. If new patient, the value is required. format : 12/31/1989. 
+
+
+### HTTP Response 
+
+Key | Description
+--------- | -----------
+response_cd |  response code.
+message | server message. if errors, show the reason.
+appot_dt | appointment date
+appot_no | appointment number. You can use this number to get reservation information through other API endpoints.
+signup_url | the url that get an account when new NPI number. it shows once only.
+url | the url that connect to telemedicine page.
+
+
+<aside class="success">
+Remember — The API makes a request to the server with a one-time access token as a header!
+</aside>
+
+## Get appointment information
+
+```java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  								.build();
+Request request = new Request.Builder()
+								.url("https://app.cybermdcare.com/api/appot/12345678")
+								.method("GET", null)
+								.addHeader("token", "[Access-token]")
+								.build();
+Response response = client.newCall(request).execute();
+```
+
+```python
+import requests
+
+url = "https://app.cybermdcare.com/api/appot/12345678"
+payload={}
+files={}
+headers = {
+  'token': '[Access-token]'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload, files=files)
+
+print(response.text)
+```
+
+```shell
+curl "https://app.cybermdcare.com/api/appot/12345678" \
+  -H 'token: [Access-token]'
+```
+
+```javascript
+var settings = {
+  "url": "https://app.cybermdcare.com/api/appot/12345678",
+  "method": "GET",
+  "headers": {
+    "token": "[Access-token]"
+  },
+};
+
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
+```
+> Make sure to replace `[Access-token]` with your Access-token.
+> The above command returns JSON structured like this:
+
+```json
+{
+    "response_cd": "200",
+    "pt_nm": "ABCD ",
+    "appot_status": "active",
+    "appot_dt": "05-22-2021 16:35",
+    "message": "",
+    "appot_no": "12345678"
+}
+```
+
+This endpoint retrieves information appointments.
+
+
+### HTTP Request
+
+`GET https://app.cybermdcare.com/api/appot/<Appot_No>`
 
 ### URL Parameters
 
 Parameter | Description
 --------- | -----------
-ID | The ID of the kitten to retrieve
+Appot_No | The number of the appointment
 
-## Delete a Specific Kitten
+### HTTP Response 
 
-```ruby
-require 'kittn'
+Key | Description
+--------- | -----------
+response_cd |  response code.
+message | server message. if errors, show the reason.
+appot_dt | appointment date
+appot_no | appointment number. You can use this number to get reservation information through other API endpoints.
+pt_nm | the name of patient.
+appot_status | the status of appointment.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
+<aside class="success">
+Remember — The API makes a request to the server with a one-time access token as a header!
+</aside>
+
+
+## Cancel an appointment
+
+```java
+OkHttpClient client = new OkHttpClient().newBuilder()
+  								.build();
+MediaType mediaType = MediaType.parse("text/plain");
+RequestBody body = new MultipartBody.Builder().setType(MultipartBody.FORM)
+  								.build();
+Request request = new Request.Builder()
+								.url("https://app.cybermdcare.com/api/appot/12345678")
+								.method("DELETE", body)
+								.addHeader("token", "[Access-token]")
+								.build();
+Response response = client.newCall(request).execute();
 ```
 
 ```python
-import kittn
+import requests
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
+url = "https://app.cybermdcare.com/api/appot/12345678"
+payload={}
+files={}
+headers = {
+  'token': '[Access-token]'
+}
+
+response = requests.request("DELETE", url, headers=headers, data=payload, files=files)
+
+print(response.text)
 ```
 
 ```shell
-curl "http://example.com/api/kittens/2" \
+curl "https://api.cybermdcare.com/api/appot/12345678" \
   -X DELETE \
-  -H "Authorization: meowmeowmeow"
+  -H 'token: [Access-token]'
 ```
 
 ```javascript
-const kittn = require('kittn');
+var settings = {
+  "url": "https://app.cybermdcare.com/api/appot/12345678",
+  "method": "DELETE",
+  "headers": {
+    "token": "[Access-token]"
+  }
+};
 
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
+$.ajax(settings).done(function (response) {
+  console.log(response);
+});
 ```
 
+> Make sure to replace `[Access-token]` with your Access-token.
 > The above command returns JSON structured like this:
 
 ```json
 {
-  "id": 2,
-  "deleted" : ":("
+    "response_cd": "200",
+    "message": "The appointment has been cancelled. ; 12345678"
 }
 ```
 
-This endpoint deletes a specific kitten.
+This endpoint cancels an appointment.
 
 ### HTTP Request
 
-`DELETE http://example.com/kittens/<ID>`
+`DELETE https://app.cybermdcare.com/api/appot/<Appot_No>`
 
 ### URL Parameters
 
 Parameter | Description
 --------- | -----------
-ID | The ID of the kitten to delete
+Appot_No | The number of the appointment
+
+### HTTP Response 
+
+Key | Description
+--------- | -----------
+response_cd |  response code.
+message | server response message.
+
+<aside class="success">
+Remember — The API makes a request to the server with a one-time access token as a header!
+</aside>
 
